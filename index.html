@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Çakmak Hattı 1943</title>
+  <meta name="description" content="Alternatif tarih strateji oyunu: 1943'te Alman ordusu Trakya'ya saldırıyor. Çakmak Hattı'nı savunun.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">ÇAKMAK HATTI <span>1943</span></div>
+    <div id="turnInfo" class="turn-info"></div>
+    <div class="spacer"></div>
+    <div class="tools">
+      <button id="btnZoomOut" title="Uzaklaştır">−</button>
+      <button id="btnZoomFit" title="Ekrana sığdır">⤢</button>
+      <button id="btnZoomIn" title="Yakınlaştır">+</button>
+      <button id="btnHelp">Kurallar</button>
+      <button id="btnSave">Kaydet</button>
+      <button id="btnMenu">Menü</button>
+    </div>
+  </header>
+  <main id="layout">
+    <div id="mapWrap">
+      <canvas id="map" aria-label="Trakya harekât haritası"></canvas>
+      <div id="tooltip" class="hidden"></div>
+      <div id="toast" class="hidden"></div>
+    </div>
+    <aside id="side">
+      <section id="phaseBox" class="panel"></section>
+      <section id="unitBox" class="panel"></section>
+      <section id="actions" class="panel actions"></section>
+      <section id="vpBox" class="panel"></section>
+      <section id="logBox" class="panel log">
+        <h3>Harp Günlüğü</h3>
+        <ol id="log"></ol>
+      </section>
+    </aside>
+  </main>
+  <div id="modal" class="hidden" role="dialog" aria-modal="true">
+    <div class="modal-card" id="modalCard"></div>
+  </div>
+
+  <script src="js/geo.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/rules.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "cakmak-hatti-1943",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Alternatif tarih strateji oyunu: 1943'te Mihver'in Trakya taarruzu ve Çakmak Hattı savunması",
+  "scripts": {
+    "test": "node tests/sim.js 5",
+    "map": "node tests/print-map.js"
+  }
+}
