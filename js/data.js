@@ -8,7 +8,11 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
   O.UNIT_TYPES = {
     tr_inf: { side: 'TR', nat: 'TR', label: 'Piyade Tümeni', atk: 3, def: 4, mp: 4, steps: 3, sym: 'inf' },
     tr_cav: { side: 'TR', nat: 'TR', label: 'Süvari Tümeni', atk: 2, def: 2, mp: 6, steps: 2, sym: 'cav' },
-    tr_arm: { side: 'TR', nat: 'TR', label: 'Zırhlı Tugay', atk: 4, def: 3, mp: 6, steps: 2, sym: 'arm', motor: true, armor: true },
+    // Türk zırhlıları: 1940'ta Fransa'dan gelen R35'ler, 1930'larda SSCB'den alınan T-26'lar,
+    // 1943'te İngiltere'den gelmeye başlayan Valentine'ler
+    tr_r35: { side: 'TR', nat: 'TR', label: 'Zırhlı Tugay (R35)', atk: 4, def: 4, mp: 5, steps: 2, sym: 'arm', motor: true, armor: true },
+    tr_arm: { side: 'TR', nat: 'TR', label: 'Zırhlı Tugay (T-26)', atk: 4, def: 3, mp: 6, steps: 2, sym: 'arm', motor: true, armor: true },
+    tr_val: { side: 'TR', nat: 'TR', label: 'Zırhlı Tugay (Valentine)', atk: 5, def: 4, mp: 5, steps: 2, sym: 'arm', motor: true, armor: true },
     tr_gar: { side: 'TR', nat: 'TR', label: 'Kale Garnizonu', atk: 1, def: 4, mp: 0, steps: 2, sym: 'gar', static: true },
     uk_arm: { side: 'TR', nat: 'UK', label: 'İngiliz Zırhlı Tugayı', atk: 6, def: 4, mp: 6, steps: 2, sym: 'arm', motor: true, armor: true },
     uk_inf: { side: 'TR', nat: 'UK', label: 'İngiliz Piyade Tümeni', atk: 5, def: 5, mp: 4, steps: 3, sym: 'inf' },
@@ -47,7 +51,8 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     { type: 'tr_gar', name: 'Boğaz Garnizonu', at: 'Gelibolu' },
     { type: 'tr_inf', name: '1. Tümen', at: 'Çatalca' },
     { type: 'tr_gar', name: 'İstanbul Garnizonu', at: 'İstanbul' },
-    { type: 'tr_arm', name: '1. Zırhlı Tugay', at: 'Çorlu' },
+    { type: 'tr_r35', name: '1. Zırhlı Tugay', at: 'Muratlı' },
+    { type: 'tr_arm', name: '2. Zırhlı Tugay', at: 'Çorlu' },
   ];
 
   // Mihver taarruz kuvvetleri. axis: K = İstanbul yönü, G = Gelibolu/Çanakkale yönü
@@ -83,6 +88,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     { turn: 4, type: 'tr_inf', name: '11. Tümen', at: 'İstanbul' },
     { turn: 5, type: 'tr_cav', name: '14. Süvari Tümeni', at: 'Tekirdağ' },
     { turn: 6, type: 'tr_inf', name: '41. Tümen', at: 'İstanbul' },
+    { turn: 7, type: 'tr_val', name: '3. Zırhlı Tugay', at: 'İstanbul' },
     { turn: 8, type: 'tr_inf', name: '57. Tümen', at: 'Gelibolu' },
     { turn: 10, type: 'uk_arm', name: 'İngiliz 7. Zırhlı Tugayı', at: 'Eceabat' },
     { turn: 11, type: 'tr_inf', name: '20. Tümen', at: 'İstanbul' },

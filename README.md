@@ -43,6 +43,7 @@ Ayrıntılı kurallar ve sonuç tablosu oyun içindeki **Kurallar** penceresinde
 | Savunma çarpanları | Çakmak/Çatalca hattı ×2, Bolayır/Edirne ×1,5, orman/tepe ×1,4, şehir ×1,3 (İstanbul ×1,6), nehir ×1,2, mevzi ×1,15/×1,3 |
 | İkmal | Kendi kontrolünüzdeki altıgenlerden bir limana bağlantı; kopan birlik zayıflar ve erir |
 | Hava | Luftwaffe güçlü başlar, 9. turdan sonra azalır; RAF desteği 5. ve 10. turlarda artar; karda uçuş yok |
+| Zırhlılar | 1. Zırhlı Tugay (R35, Muratlı) ve 2. Zırhlı Tugay (T-26, Çorlu) hattın gerisinde yedekte; 7. turda İstanbul'a Valentine'li 3. Zırhlı Tugay gelir |
 | Hava durumu | Ocak–Şubat kar ve çamur sık; Mart–Nisan daha açık |
 | Zafer | İstanbul düşerse Mihver anında kazanır; aksi halde Mihver'in aldığı şehir puanlarına göre sonuç |
 
