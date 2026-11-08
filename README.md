@@ -10,7 +10,8 @@ Alternatif tarih temalı, altıgen haritalı, sıra tabanlı bir harekât oyunu.
 
 Bu bir **alternatif tarih** senaryosudur: böyle bir taarruz yaşanmamıştır. Birlik numaraları,
 kuvvet değerleri ve takviye takvimi oyun dengesi için kurgulanmıştır. Haritadaki kıyılar, sınırlar,
-Meriç ve Ergene nehirleri, Istranca Dağları gerçek coğrafyadan altıgenlere (≈9 km) dönüştürülmüştür;
+Meriç ve Ergene nehirleri, Istranca Dağları gerçek coğrafyadan altıgenlere (≈9 km) dönüştürülmüştür
+(Çanakkale ve İstanbul boğazları okunabilsin diye bir altıgen genişliğinde, yani gerçeğinden geniş çizilmiştir);
 Çakmak, Çatalca ve Bolayır hatlarının güzergâhları yaklaşıktır.
 
 ## Nasıl oynanır

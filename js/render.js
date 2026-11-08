@@ -287,7 +287,20 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
         land: ['700 16px Georgia, serif', 'rgba(110,90,55,0.45)'],
         terrain: ['italic 600 10px Georgia, serif', 'rgba(55,80,40,0.75)'],
         river: ['italic 600 9px Georgia, serif', 'rgba(40,90,140,0.9)'],
+        strait: ['italic 700 8.5px Georgia, serif', 'rgba(30,65,100,0.85)'],
       }[l.kind];
+      if (l.rot) {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((l.rot * Math.PI) / 180);
+        ctx.font = st[0];
+        ctx.fillStyle = st[1];
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(l.text, 0, 0);
+        ctx.restore();
+        continue;
+      }
       ctx.font = st[0];
       ctx.fillStyle = st[1];
       ctx.textAlign = 'center';

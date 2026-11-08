@@ -147,11 +147,10 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     ],
     // Sadece süs: Asya yakasındaki yerleşimler
     DECOR_CITIES: [
-      { name: 'Çanakkale', lat: 40.15, lon: 26.41 },
-      { name: 'Lapseki', lat: 40.34, lon: 26.69 },
-      { name: 'Bandırma', lat: 40.35, lon: 27.97 },
+      { name: 'Çanakkale', lat: 40.15, lon: 26.53 },
+      { name: 'Lapseki', lat: 40.3, lon: 26.76 },
+      { name: 'Bandırma', lat: 40.29, lon: 28.0 },
       { name: 'Bursa', lat: 40.19, lon: 29.06 },
-      { name: 'Üsküdar', lat: 41.02, lon: 29.05 },
     ],
     LABELS: [
       { text: 'BULGARİSTAN', lat: 42.04, lon: 26.75, kind: 'country' },
@@ -159,6 +158,8 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       { text: 'KARADENİZ', lat: 41.78, lon: 28.75, kind: 'sea' },
       { text: 'MARMARA DENİZİ', lat: 40.7, lon: 28.25, kind: 'sea' },
       { text: 'Saros Körfezi', lat: 40.62, lon: 26.3, kind: 'sea-small' },
+      { text: 'Çanakkale Boğazı', lat: 40.21, lon: 26.5, kind: 'strait', rot: -38 },
+      { text: 'İstanbul Boğazı', lat: 41.1, lon: 29.12, kind: 'strait', rot: -78 },
       { text: 'EGE DENİZİ', lat: 40.3, lon: 26.08, kind: 'sea-small' },
       { text: 'ANADOLU', lat: 40.12, lon: 28.0, kind: 'land' },
       { text: 'Istranca Dağları', lat: 41.79, lon: 27.72, kind: 'terrain' },
@@ -262,6 +263,13 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       h.dirNbrs = G.dirs(h.r).map(function (d) { return idx(h.c + d[0], h.r + d[1]); });
       h.nbrs = h.dirNbrs.filter(function (i) { return i >= 0; });
     }
+
+    // Boğazlar: Trakya'ya komşu Anadolu altıgenleri suya çevrilir. Böylece Çanakkale ve
+    // İstanbul boğazları haritada açık bir su yolu olarak görünür (gerçekte 1–7 km genişlikte).
+    const strait = hexes.filter(function (h) {
+      return h.terrain === 'anadolu' && h.nbrs.some(function (i) { return land(hexes[i]); });
+    });
+    for (const h of strait) { h.terrain = 'sea'; h.strait = true; }
 
     // Nehirler
     for (const h of hexes) {
