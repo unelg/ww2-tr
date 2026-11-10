@@ -169,7 +169,9 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       '<h3>Zafer</h3><ul>' +
       '<li>Mihver <b>İstanbul</b>\'u alırsa oyun anında biter.</li>' +
       '<li>Aksi halde 16. turun sonunda Mihver\'in elindeki Türk şehirlerinin puanı (haritadaki rakamlar) toplanır; sizin aldığınız sınır ötesi şehirler bu puandan düşülür: ' +
-      '0–4 Türk Kesin Zaferi · 5–10 Türk Zaferi · 11–16 Berabere · 17+ Mihver Zaferi.</li></ul>' +
+      '0–4 Türk Kesin Zaferi · 5–10 Türk Zaferi · 11–16 Berabere · 17+ Mihver Zaferi.</li>' +
+      '<li><b>Uzatma:</b> 16. haftanın sonunda isterseniz savaşa devam edebilirsiniz. İki taraf da düzenli yedek alır; savaş İstanbul düşene, siz bitirene ya da 1943 sonuna kadar sürer.</li>' +
+      '<li><b>Skor:</b> Elde tutulan şehir puanı × 40, İstanbul elde +200, dayanılan her hafta +10, verdirilen her Mihver kademesi +15, kaybedilen her Türk kademesi −8; sonra zorluk çarpanı (Kolay ×0,75, Zor ×1,3). Skora göre rütbe: Albay, Tuğgeneral (750), Tümgeneral (1000), Korgeneral (1250), Orgeneral (1500), Mareşal (1800).</li></ul>' +
       '<h3>Kısayollar</h3><p><kbd>Enter</kbd> turu bitir · <kbd>N</kbd> sıradaki birlik · <kbd>H</kbd> hava saldırısı · <kbd>T</kbd> takviye · <kbd>Esc</kbd> seçimi bırak · <kbd>+</kbd>/<kbd>−</kbd> yakınlaştır</p>' +
       '<h3>Harita</h3><div class="legend">' +
       '<i style="background:#b3262e"></i><span>Türk birliği. Pul üzerindeki rakamlar tam güçteki saldırı-savunma-hareket değerleridir; sağdaki noktalar kalan kademeyi gösterir, güç kademeyle orantılı düşer.</span>' +
@@ -208,26 +210,73 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     );
   }
 
+  const BEST_KEY = 'cakmak-hatti-1943-rekor';
+  function readBest() {
+    try { return JSON.parse(localStorage.getItem(BEST_KEY) || 'null'); } catch (e) { return null; }
+  }
+  // En iyi skoru bu tarayıcıda saklar; yeni rekor ise true döner
+  function recordBest(sc, st) {
+    const best = readBest();
+    if (best && best.total >= sc.total) return false;
+    try {
+      localStorage.setItem(BEST_KEY, JSON.stringify({
+        total: sc.total, rank: sc.rank, difficulty: st.difficulty, turn: st.turn, date: new Date().toISOString().slice(0, 10),
+      }));
+    } catch (e) { return false; }
+    return true;
+  }
+
   function showEnd() {
     const st = UI.state;
     const r = st.result;
     if (!r) return;
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* yok say */ }
+    const sc = r.score || R.score(st);
+    const canGoOn = R.canContinue(st);
+    try {
+      // Devam edilebilecek bir oyun kayıtlı kalır; biten oyunun kaydı silinir
+      if (canGoOn) localStorage.setItem(SAVE_KEY, JSON.stringify(st));
+      else localStorage.removeItem(SAVE_KEY);
+    } catch (e) { /* yok say */ }
+    const prevBest = readBest();
+    const isRecord = recordBest(sc, st);
+    const best = readBest();
     const cls = r.winner === 'TR' ? 'TR' : r.winner === 'DE' ? 'DE' : 'draw';
+    const parts = sc.parts.map(function (p) {
+      return '<dt>' + esc(p.label) + '</dt><dd class="num">' + (p.value > 0 ? '+' : '') + p.value + '</dd>';
+    }).join('') +
+      (sc.mult !== 1 ? '<dt>Zorluk çarpanı (' + esc(R.DIFFICULTY[st.difficulty].label) + ')</dt><dd class="num">×' + String(sc.mult).replace('.', ',') + '</dd>' : '');
+    const bestLine = isRecord
+      ? '<p class="record">Yeni rekor!' + (prevBest ? ' Önceki en iyi: ' + prevBest.total : '') + '</p>'
+      : best ? '<p class="hint">Bu tarayıcıdaki en iyi skor: <b>' + best.total + '</b> (' + esc(best.rank) + ', ' + esc(R.DIFFICULTY[best.difficulty] ? R.DIFFICULTY[best.difficulty].label : best.difficulty) + ')</p>' : '';
+    const r16 = st.extended && st.result16
+      ? '<p class="hint">16. hafta sonundaki sonuç: <b>' + esc(st.result16.title) + '</b> · skor ' + (st.result16.score ? st.result16.score.total : '—') + '</p>'
+      : '';
     openModal(
-      '<h2>Harekât sona erdi</h2>' +
-      '<p class="sub">' + esc(R.dateLabel(st.turn)) + ' · ' + esc(R.DIFFICULTY[st.difficulty].label) + '</p>' +
+      '<h2>' + (canGoOn ? '16 hafta doldu' : 'Harekât sona erdi') + '</h2>' +
+      '<p class="sub">' + esc(R.dateLabel(st.turn)) + ' · ' + st.turn + '. tur' + (st.extended ? ' (uzatma)' : '') + ' · ' + esc(R.DIFFICULTY[st.difficulty].label) + '</p>' +
       '<div class="result-banner ' + cls + '">' + esc(r.title) + '</div>' +
-      '<p>' + esc(r.text) + '</p>' +
+      '<p>' + esc(r.text) + '</p>' + r16 +
+      '<div class="score-box"><div><div class="mods">Skor</div><div class="score-big">' + sc.total + '</div></div>' +
+      '<div><div class="mods">Rütbe</div><div class="score-rank">' + esc(sc.rank) + '</div></div></div>' +
+      bestLine +
+      '<dl class="stats score-parts">' + parts + '</dl>' +
       '<dl class="stats">' +
       '<dt>Mihver zafer puanı</dt><dd>' + r.vp + '</dd>' +
       '<dt>Türk kayıpları</dt><dd>' + st.stats.lost.TR + ' kademe, ' + st.stats.destroyed.TR + ' birlik imha</dd>' +
       '<dt>Mihver kayıpları</dt><dd>' + st.stats.lost.DE + ' kademe, ' + st.stats.destroyed.DE + ' birlik imha</dd>' +
       '</dl>' +
-      '<div class="row end"><button id="mMap">Haritaya bak</button><button id="mNew" class="primary">Yeni oyun</button></div>',
+      (canGoOn ? '<p class="hint">İsterseniz savaşı sürdürebilirsiniz: iki taraf da düzenli yedek alır, Mihver İstanbul\'u alana ya da siz bitirene kadar (en geç 1943 sonu) devam eder. Skor her hafta yeniden hesaplanır.</p>' : '') +
+      '<div class="row end"><button id="mMap">Haritaya bak</button>' +
+      (canGoOn ? '<button id="mGoOn" class="primary">Savaşa devam et ▶</button><button id="mNew">Yeni oyun</button>'
+        : '<button id="mNew" class="primary">Yeni oyun</button>') + '</div>',
       function (el) {
         el.querySelector('#mNew').onclick = function () { closeModal(); showIntro(); };
         el.querySelector('#mMap').onclick = closeModal;
+        const go = el.querySelector('#mGoOn');
+        if (go) go.onclick = function () {
+          closeModal();
+          if (R.continueWar(st)) { refresh(); runGerman(); }
+        };
       }
     );
   }
@@ -521,7 +570,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     const w = R.WEATHER[st.weather];
     $('turnInfo').innerHTML = st.phase === 'deploy'
       ? '<b>Konuşlanma</b> · Ocak 1943'
-      : '<b>' + st.turn + '/' + st.maxTurns + '. Tur</b> · ' + esc(R.dateLabel(st.turn)) + ' · ' + w.icon + ' ' + esc(w.label);
+      : '<b>' + (st.extended ? st.turn + '. Tur</b> (uzatma)' : st.turn + '/' + st.maxTurns + '. Tur</b>') + ' · ' + esc(R.dateLabel(st.turn)) + ' · ' + w.icon + ' ' + esc(w.label);
 
     // aşama kutusu
     let ph = '<span class="phase-tag ' + st.phase + '">' + phaseLabel(st) + '</span>';
@@ -581,8 +630,11 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       return;
     }
     if (st.phase === 'over') {
-      box.innerHTML = '<button id="bRes" class="wide primary">Sonucu göster</button>';
+      const goOn = R.canContinue(st);
+      box.innerHTML = '<button id="bRes" class="' + (goOn ? '' : 'wide ') + 'primary">Sonucu göster</button>' +
+        (goOn ? '<button id="bGoOn">Savaşa devam et ▶</button>' : '');
       $('bRes').onclick = showEnd;
+      if (goOn) $('bGoOn').onclick = function () { if (R.continueWar(st)) { refresh(); runGerman(); } };
       return;
     }
     const my = st.phase === 'TR' && !UI.busy;
@@ -591,7 +643,8 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       '<button id="bAir"' + (my && st.air.TR > 0 ? '' : ' disabled') + (UI.mode === 'air' ? ' class="active"' : '') + '>✈ Hava saldırısı (' + st.air.TR + ')</button>' +
       '<button id="bRep"' + (canRep ? '' : ' disabled') + ' title="Seçili hasarlı birliğe +1 kademe">⟲ Takviye (' + st.rep.TR + ')</button>' +
       '<button id="bNext"' + (my ? '' : ' disabled') + '>Sıradaki birlik</button>' +
-      '<button id="bEnd" class="primary"' + (my ? '' : ' disabled') + '>Turu bitir ⏭</button>';
+      '<button id="bEnd" class="primary"' + (my ? '' : ' disabled') + '>Turu bitir ⏭</button>' +
+      (st.extended ? '<button id="bStop" class="wide"' + (my ? '' : ' disabled') + '>Savaşı burada bitir ve skoru al</button>' : '');
     $('bAir').onclick = function () {
       UI.mode = UI.mode === 'air' ? 'normal' : 'air';
       if (UI.mode === 'air') { UI.sel = null; UI.reach = null; toast('Hava saldırısı: bir düşman birliğine tıklayın.'); }
@@ -601,6 +654,19 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     $('bRep').onclick = function () { if (UI.sel && R.replace(st, UI.sel)) { toast(UI.sel.name + ' takviye edildi.'); afterAction(); } };
     $('bNext').onclick = nextUnit;
     $('bEnd').onclick = endTurn;
+    const stop = $('bStop');
+    if (stop) {
+      stop.onclick = function () {
+        // confirm() artifakt içinde çalışmaz; iki tıklamalı onay
+        if (!stop.dataset.armed) {
+          stop.dataset.armed = '1';
+          stop.textContent = 'Emin misiniz? Bitirmek için tekrar tıklayın';
+          setTimeout(function () { if (stop.isConnected) { delete stop.dataset.armed; stop.textContent = 'Savaşı burada bitir ve skoru al'; } }, 4000);
+          return;
+        }
+        if (R.endWar(st)) { refresh(); showEnd(); }
+      };
+    }
   }
 
   function renderVP() {

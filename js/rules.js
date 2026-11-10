@@ -6,6 +6,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
   O.Rules = R;
 
   R.MAX_TURNS = 16;
+  R.EXT_MAX_TURNS = 52; // uzatmada en fazla 1943 sonuna kadar
   R.MONTHS = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
   R.WEATHER = {
     acik: { label: 'Açık', icon: '☀', note: 'Normal hareket ve hava desteği.' },
@@ -535,10 +536,23 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     }
     return -1;
   };
+  // Uzatma turlarında (16. turdan sonra) iki taraf da düzenli yedek alır
+  R.extendedReinforcements = function (state, side) {
+    const t = state.turn;
+    if (!state.extended || t <= R.MAX_TURNS) return [];
+    const out = [];
+    if (side === 'TR') {
+      if (t % 2 === 0) out.push({ type: 'tr_inf', name: (60 + t) + '. Tümen', at: (t % 4 === 0) ? 'Gelibolu' : 'İstanbul' });
+      if (t % 6 === 0) out.push({ type: 'uk_arm', name: 'İngiliz ' + (t - 10) + '. Zırhlı Tugayı', at: 'Eceabat' });
+    } else if (t % 3 === 0) {
+      out.push({ type: 'de_inf', name: (300 + t) + '. Piyade Tümeni', lat: 42.05, lon: 26.9 + (t % 2) * 0.4, axis: t % 2 ? 'N' : 'S' });
+    }
+    return out;
+  };
   R.spawnReinforcements = function (state, side) {
     const list = (side === 'TR' ? O.TR_REINF : O.DE_REINF).filter(function (r) {
       return r.turn === state.turn && (!r.diff || r.diff.indexOf(state.difficulty) >= 0);
-    }).concat(state.delayed[side]);
+    }).concat(R.extendedReinforcements(state, side), state.delayed[side]);
     state.delayed[side] = [];
     for (const d of list) {
       const hx = R.spawnHex(state, side, d);
@@ -620,8 +634,12 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
 
   R.rollWeather = function (state) {
     if (state.turn === 1) return 'acik'; // baskın günü
-    const m = Math.min(R.turnDate(state.turn).getUTCMonth(), 3);
-    const t = [[0.3, 0.3], [0.35, 0.35], [0.45, 0.45], [0.65, 0.35]][m]; // açık, yağmur, (kalan: kar)
+    const m = R.turnDate(state.turn).getUTCMonth();
+    // her ay için [açık, yağmur] olasılığı; kalanı kar
+    const t = [
+      [0.3, 0.3], [0.35, 0.35], [0.45, 0.45], [0.65, 0.35], [0.75, 0.25], [0.9, 0.1],
+      [0.95, 0.05], [0.95, 0.05], [0.85, 0.15], [0.65, 0.35], [0.45, 0.4], [0.35, 0.35],
+    ][m];
     const x = R.random(state);
     if (x < t[0]) return 'acik';
     if (x < t[0] + t[1]) return 'yagmur';
@@ -675,13 +693,37 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
   R.endTurkishPhase = function (state) {
     if (state.phase !== 'TR') return;
     R.endPhase(state, 'TR');
-    if (state.turn >= state.maxTurns) {
-      state.phase = 'over';
-      state.result = R.evaluate(state);
-      R.log(state, 'Savaş sona erdi: ' + state.result.title, 'phase');
+    if (state.turn >= (state.extended ? R.EXT_MAX_TURNS : state.maxTurns)) {
+      R.finish(state);
       return;
     }
     R.startTurn(state, state.turn + 1);
+  };
+  R.finish = function (state) {
+    state.phase = 'over';
+    state.result = R.evaluate(state);
+    R.log(state, 'Savaş sona erdi: ' + state.result.title + ' · Skor ' + state.result.score.total, 'phase');
+  };
+  // 16. tur sonunda oyuncu isterse savaş sürer
+  R.canContinue = function (state) {
+    return state.phase === 'over' && !state.extended && state.turn >= state.maxTurns &&
+      state.turn < R.EXT_MAX_TURNS && state.owner[R.cityHex('İstanbul')] !== 'DE';
+  };
+  R.continueWar = function (state) {
+    if (!R.canContinue(state)) return false;
+    state.extended = true;
+    state.result16 = state.result;
+    state.result = null;
+    R.log(state, 'Savaş uzatıldı: cephe 16. haftadan sonra da sürüyor.', 'phase');
+    R.startTurn(state, state.turn + 1);
+    return true;
+  };
+  // Uzatmada oyuncu savaşı kendi hamlesinde bitirebilir
+  R.endWar = function (state) {
+    if (!state.extended || state.phase !== 'TR') return false;
+    R.endPhase(state, 'TR');
+    R.finish(state);
+    return true;
   };
 
   // ------------------------------------------------------------------- zafer
@@ -704,11 +746,45 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
   R.evaluate = function (state) {
     const vp = R.germanVP(state);
     const ist = R.cityHex('İstanbul');
+    let res = null;
     if (state.owner[ist] === 'DE') {
-      return { winner: 'DE', title: 'Mihver Kesin Zaferi', text: 'İstanbul düştü. Boğazlar Mihver denetimine geçti; savaşın seyri değişti.', vp: vp };
+      res = { winner: 'DE', title: 'Mihver Kesin Zaferi', text: 'İstanbul düştü. Boğazlar Mihver denetimine geçti; savaşın seyri değişti.', vp: vp };
+    } else {
+      for (const t of R.VP_TIERS) if (vp <= t.max) { res = { winner: t.winner, title: t.title, text: t.text, vp: vp }; break; }
     }
-    for (const t of R.VP_TIERS) if (vp <= t.max) return { winner: t.winner, title: t.title, text: t.text, vp: vp };
-    return null;
+    res.turn = state.turn;
+    res.score = R.score(state);
+    return res;
+  };
+
+  // ------------------------------------------------------------------- skor
+  R.SCORE_MULT = { kolay: 0.75, normal: 1, zor: 1.3 };
+  R.RANKS = [
+    { min: 1800, title: 'Mareşal' },
+    { min: 1500, title: 'Orgeneral' },
+    { min: 1250, title: 'Korgeneral' },
+    { min: 1000, title: 'Tümgeneral' },
+    { min: 750, title: 'Tuğgeneral' },
+    { min: -Infinity, title: 'Albay' },
+  ];
+  R.score = function (state) {
+    let totalVP = 0;
+    for (const c of O.MAP.cities) if (c.country === 'TR' && c.vp && !c.major) totalVP += c.vp;
+    const held = totalVP - R.germanVP(state); // sınır ötesi şehirler alınırsa toplamı aşabilir
+    const istHeld = state.owner[R.cityHex('İstanbul')] !== 'DE';
+    const parts = [
+      { label: 'Elde tutulan şehirler (' + held + ' puan × 40)', value: held * 40 },
+      { label: istHeld ? 'İstanbul elde' : 'İstanbul düştü', value: istHeld ? 200 : 0 },
+      { label: 'Dayanılan hafta (' + state.turn + ' × 10)', value: state.turn * 10 },
+      { label: 'Mihver kayıpları (' + state.stats.lost.DE + ' kademe × 15)', value: state.stats.lost.DE * 15 },
+      { label: 'Türk kayıpları (' + state.stats.lost.TR + ' kademe × −8)', value: -state.stats.lost.TR * 8 },
+    ];
+    const base = parts.reduce(function (a, p) { return a + p.value; }, 0);
+    const mult = R.SCORE_MULT[state.difficulty] || 1;
+    const total = Math.max(0, Math.round(base * mult));
+    let rank = R.RANKS[R.RANKS.length - 1].title;
+    for (const r of R.RANKS) if (total >= r.min) { rank = r.title; break; }
+    return { parts: parts, base: base, mult: mult, total: total, rank: rank };
   };
   R.checkSuddenDeath = function (state) {
     if (state.phase === 'over') return;

@@ -46,6 +46,8 @@ Ayrıntılı kurallar ve sonuç tablosu oyun içindeki **Kurallar** penceresinde
 | Zırhlılar | 1. Zırhlı Tugay (R35, Muratlı) ve 2. Zırhlı Tugay (T-26, Çorlu) hattın gerisinde yedekte; 7. turda İstanbul'a Valentine'li 3. Zırhlı Tugay gelir |
 | Hava durumu | Ocak–Şubat kar ve çamur sık; Mart–Nisan daha açık |
 | Zafer | İstanbul düşerse Mihver anında kazanır; aksi halde Mihver'in aldığı şehir puanlarına göre sonuç |
+| Uzatma | 16. haftanın sonunda isterseniz savaş sürer: iki taraf düzenli yedek alır; İstanbul düşene, siz bitirene ya da 1943 sonuna kadar |
+| Skor | Elde tutulan şehir puanı ×40, İstanbul +200, hafta başına +10, Mihver kademe kaybı ×15, Türk kademe kaybı ×−8, zorluk çarpanı (Kolay ×0,75, Zor ×1,3). Rütbe: Albay → Tuğgeneral (750) → Tümgeneral (1000) → Korgeneral (1250) → Orgeneral (1500) → Mareşal (1800). En iyi skor tarayıcıda saklanır |
 
 ### Kısayollar
 

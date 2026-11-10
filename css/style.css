@@ -203,6 +203,12 @@ table.crt th { background: var(--panel-2); }
 .result-banner.TR { background: rgba(200, 56, 63, 0.25); }
 .result-banner.DE { background: rgba(135, 148, 163, 0.3); }
 .result-banner.draw { background: rgba(217, 180, 74, 0.2); }
+.score-box { display: flex; gap: 28px; align-items: flex-end; margin: 12px 0 4px; flex-wrap: wrap; }
+.score-big { font-size: 40px; font-weight: 800; line-height: 1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.score-rank { font: 700 22px/1.1 Georgia, serif; }
+.record { color: var(--accent); font-weight: 700; margin: 6px 0; }
+.score-parts { font-size: 12.5px; }
+.score-parts dd.num { text-align: right; font-variant-numeric: tabular-nums; }
 .legend { display: grid; grid-template-columns: auto 1fr; gap: 6px 10px; align-items: center; font-size: 13px; }
 .legend i { display: inline-block; width: 22px; height: 14px; border-radius: 3px; border: 1px solid #0006; }
 kbd { background: var(--panel-2); border: 1px solid var(--line); border-radius: 3px; padding: 0 4px; font-size: 12px; }
