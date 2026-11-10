@@ -4,6 +4,9 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
 (function (O) {
   'use strict';
 
+  // Oyunun sürümü: arayüzde, kayıtlarda ve ortak skor tablosunda görünür
+  O.VERSION = '0.4.0';
+
   // atk: saldırı, def: savunma, mp: hareket puanı, steps: kademe (can) sayısı
   O.UNIT_TYPES = {
     tr_inf: { side: 'TR', nat: 'TR', label: 'Piyade Tümeni', atk: 3, def: 4, mp: 4, steps: 3, sym: 'inf' },

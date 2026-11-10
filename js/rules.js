@@ -576,7 +576,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     opts = opts || {};
     const seed = (opts.seed != null ? opts.seed : (Date.now() ^ Math.floor(Math.random() * 1e9))) | 0;
     const state = {
-      version: 1, seed: seed, rng: seed, turn: 1, maxTurns: R.MAX_TURNS, phase: 'deploy',
+      version: 1, gameVersion: O.VERSION, seed: seed, rng: seed, turn: 1, maxTurns: R.MAX_TURNS, phase: 'deploy',
       difficulty: opts.difficulty || 'normal', weather: 'acik', units: [], owner: [], ownerVer: 0,
       air: { TR: 0, DE: 0 }, rep: { TR: 0, DE: 0 }, log: [], result: null, nextId: 1,
       delayed: { TR: [], DE: [] }, stats: { lost: { TR: 0, DE: 0 }, destroyed: { TR: 0, DE: 0 } },

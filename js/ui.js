@@ -69,16 +69,20 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
   }
 
   // ------------------------------------------------------------ modallar
-  function openModal(html, onBind) {
+  function openModal(html, onBind, kind) {
+    UI.modalKind = kind || null;
     $('modalCard').innerHTML = html;
     $('modal').classList.remove('hidden');
     if (onBind) onBind($('modalCard'));
   }
   function closeModal() {
+    UI.modalKind = null;
     $('modal').classList.add('hidden');
     $('modalCard').innerHTML = '';
   }
   UI.closeModal = closeModal;
+  UI.showEnd = function () { showEnd(); };
+  UI.showBoard = function () { showBoard(); };
 
   function hasSave() {
     try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; }
@@ -113,7 +117,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     const canLoad = hasSave();
     openModal(
       '<h2>Çakmak Hattı 1943</h2>' +
-      '<p class="sub">Alternatif tarih · Trakya harekâtı · Ocak – Nisan 1943</p>' +
+      '<p class="sub">Alternatif tarih · Trakya harekâtı · Ocak – Nisan 1943 · sürüm ' + esc(O.VERSION) + '</p>' +
       '<p>Türkiye savaşın başından beri tarafsız. Adını Mareşal Fevzi Çakmak\'tan alan ve Karadeniz kıyısındaki Kıyıköy\'den Vize, Lüleburgaz ve Hayrabolu üzerinden Saros Körfezi\'ne uzanan <b>Çakmak Hattı</b> bu senaryoda tamamlanmış; 1. Ordu sığınaklarına yerleşmiştir.</p>' +
       '<p><b>4 Ocak 1943</b> sabahı, Stalingrad\'da sarsılan Mihver, Boğazları ele geçirip Karadeniz\'e yol açmak için Bulgaristan ve işgal altındaki Yunan Trakyası\'ndan sınırı geçer. Panzer tümenleri Ergene ovasına, dağ tümenleri Istranca\'ya yüklenir.</p>' +
       '<p>Görev: <b>İstanbul\'u ve Gelibolu Yarımadası\'nı korumak</b>, 16 hafta boyunca dayanmak. Bahara doğru İngiliz hava ve kara desteği gelecek.</p>' +
@@ -125,6 +129,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       '</div>' +
       '<div class="row end">' +
       (canLoad ? '<button id="mLoad">Kayıtlı oyunu yükle</button>' : '') +
+      '<button id="mBoard">Skor tablosu</button>' +
       '<button id="mRules">Kurallar</button>' +
       '<button id="mStart" class="primary">Konuşlanmaya başla</button>' +
       '</div>',
@@ -135,10 +140,104 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
           newGame(d);
         };
         el.querySelector('#mRules').onclick = function () { showHelp(showIntro); };
+        el.querySelector('#mBoard').onclick = function () { showBoard(showIntro); };
         const l = el.querySelector('#mLoad');
         if (l) l.onclick = function () { closeModal(); if (!load()) showIntro(); };
-      }
+      },
+      'intro'
     );
+  }
+
+  // ------------------------------------------------------------ ortak skor tablosu
+  const Board = O.Board;
+  function boardStatusHtml() {
+    if (Board.status === 'off') return '<p class="hint">Ortak skor tablosu yalnızca oyunun claude.ai\'deki sayfasında, oturum açıkken çalışır. Bu kopyada skorlar yalnızca bu tarayıcıda saklanır.</p>';
+    if (Board.status === 'loading' && !Board.rows.length) return '<p class="hint">Skor tablosu yükleniyor…</p>';
+    if (Board.status === 'slow') return '<p class="hint">Skor tablosuna şu an ulaşılamıyor; bağlantı gelince kendiliğinden güncellenecek.</p>';
+    if (Board.status === 'error') return '<p class="hint">Skor tablosu açılamadı. Sayfayı daha sonra yeniden açmayı deneyin.</p>';
+    return '';
+  }
+  function boardTableHtml(limit, withDelete) {
+    const rows = Board.rows.slice(0, limit);
+    if (!rows.length) return Board.status === 'ready' ? '<p class="hint">Henüz skor yok. İlk skoru siz ekleyin.</p>' : '';
+    const diff = function (d) { return R.DIFFICULTY[d] ? R.DIFFICULTY[d].label : '—'; };
+    const body = rows.map(function (r, i) {
+      const me = r.id === Board.myId;
+      return '<tr' + (me ? ' class="me"' : '') + '>' +
+        '<td class="num">' + (i + 1) + '</td>' +
+        '<td>' + esc(Board.nameOf(r.id)) + '</td>' +
+        '<td class="num"><b>' + esc(r.total) + '</b></td>' +
+        '<td>' + esc(r.rank || '') + '</td>' +
+        '<td>' + esc(diff(r.difficulty)) + '</td>' +
+        '<td class="wide-col">' + esc(r.outcome || '') + '</td>' +
+        '<td class="num">' + esc(r.turn || '') + (r.extended ? '+' : '') + '</td>' +
+        '<td class="wide-col">' + esc(r.version ? 'v' + r.version : '') + '</td>' +
+        '<td class="wide-col">' + esc(String(r.at || '').slice(0, 10)) + '</td>' +
+        (withDelete ? '<td>' + (me ? '' : '<button class="mini" data-del="' + esc(r.id) + '">Sil</button>') + '</td>' : '') +
+        '</tr>';
+    }).join('');
+    return '<div class="table-wrap"><table class="board"><thead><tr><th>#</th><th>Oyuncu</th><th>Skor</th><th>Rütbe</th><th>Zorluk</th>' +
+      '<th class="wide-col">Sonuç</th><th>Tur</th><th class="wide-col">Sürüm</th><th class="wide-col">Tarih</th>' + (withDelete ? '<th></th>' : '') +
+      '</tr></thead><tbody>' + body + '</tbody></table></div>';
+  }
+  function bindDeletes(el) {
+    el.querySelectorAll('button[data-del]').forEach(function (b) {
+      b.onclick = async function () {
+        if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Emin misiniz?'; return; }
+        b.disabled = true;
+        if (!(await Board.remove(b.getAttribute('data-del')))) { b.textContent = 'Silinemedi'; }
+      };
+    });
+  }
+  function showBoard(back) {
+    const mine = Board.myRow();
+    openModal(
+      '<h2>Ortak skor tablosu</h2>' +
+      '<p class="sub">Her oyuncunun en iyi skoru · sürüm ' + esc(O.VERSION) + '</p>' +
+      boardStatusHtml() +
+      (mine ? '<p class="hint">Sizin en iyi skorunuz: <b>' + esc(mine.total) + '</b> (' + esc(mine.rank || '') + ') · ' + esc(mine.games || 1) + ' oyun</p>' : '') +
+      boardTableHtml(100, Board.isOwner) +
+      (Board.isOwner && Board.rows.length ? '<p class="hint">Sayfanın sahibi olarak istenmeyen kayıtları silebilirsiniz.</p>' : '') +
+      '<p class="mods">Tur sütunundaki + işareti uzatma oynandığını gösterir.</p>' +
+      '<div class="row end"><button id="bdBack" class="primary">' + (back ? 'Geri' : 'Kapat') + '</button></div>',
+      function (el) {
+        el.querySelector('#bdBack').onclick = function () { if (back) back(); else closeModal(); };
+        bindDeletes(el);
+      },
+      'board'
+    );
+    UI.boardBack = back || null;
+  }
+  // Sonuç ekranındaki tablo bölümü
+  function renderBoardSlot() {
+    const slot = document.getElementById('boardSlot');
+    const st = UI.state;
+    if (!slot || !st || !st.result) return;
+    const sc = st.result.score;
+    const key = st.seed + ':' + st.turn + ':' + sc.total;
+    const sent = UI.boardSent && UI.boardSent[key];
+    let action = '';
+    if (Board.available()) {
+      if (sent) action = '<p class="' + (sent.ok ? 'record' : 'hint') + '">' + esc(sent.text) + '</p>';
+      else if (Board.canSubmit()) action = '<button id="bdSend" class="primary">Skoru ortak tabloya ekle</button>';
+      else action = '<p class="hint">Skor eklemek için bu sayfada oturum açmış olmanız ve en az "Katkıda bulunan" erişiminiz olması gerekir.</p>';
+    }
+    slot.innerHTML = '<h3>Ortak skor tablosu</h3>' + boardStatusHtml() + action + boardTableHtml(5, false) +
+      (Board.rows.length > 5 ? '<p><button id="bdAll" class="mini">Tüm tabloyu göster</button></p>' : '');
+    const send = slot.querySelector('#bdSend');
+    if (send) send.onclick = async function () {
+      send.disabled = true;
+      send.textContent = 'Gönderiliyor…';
+      const res = await Board.submit(st);
+      UI.boardSent = UI.boardSent || {};
+      UI.boardSent[key] = res.ok
+        ? { ok: true, text: res.improved ? 'Skorunuz ortak tabloya eklendi.' : 'Kaydedildi. Tablodaki en iyi skorunuz (' + res.best + ') daha yüksek olduğu için o kalıyor.' }
+        : { ok: false, text: res.reason === 'denied' ? 'Bu sayfada skor yazma izniniz yok.' : res.reason === 'full' ? 'Skor tablosu dolu.' : 'Skor gönderilemedi, birazdan yeniden deneyin.' };
+      if (!res.ok && res.reason === 'error') delete UI.boardSent[key];
+      renderBoardSlot();
+    };
+    const all = slot.querySelector('#bdAll');
+    if (all) all.onclick = function () { showBoard(showEnd); };
   }
 
   function showHelp(back) {
@@ -259,6 +358,7 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
       '<div class="score-box"><div><div class="mods">Skor</div><div class="score-big">' + sc.total + '</div></div>' +
       '<div><div class="mods">Rütbe</div><div class="score-rank">' + esc(sc.rank) + '</div></div></div>' +
       bestLine +
+      '<div id="boardSlot" class="board-slot"></div>' +
       '<dl class="stats score-parts">' + parts + '</dl>' +
       '<dl class="stats">' +
       '<dt>Mihver zafer puanı</dt><dd>' + r.vp + '</dd>' +
@@ -277,8 +377,10 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
           closeModal();
           if (R.continueWar(st)) { refresh(); runGerman(); }
         };
-      }
+      },
+      'end'
     );
+    renderBoardSlot();
   }
 
   // ------------------------------------------------------------ saldırı ekranı
@@ -772,6 +874,13 @@ var Oyun = globalThis.Oyun = globalThis.Oyun || {};
     $('btnHelp').onclick = function () { showHelp(); };
     $('btnSave').onclick = function () { if (!UI.busy) save(false); };
     $('btnMenu').onclick = showMenu;
+    $('btnBoard').onclick = function () { showBoard(); };
+    $('ver').textContent = 'v' + O.VERSION;
+    Board.onChange(function () {
+      if (UI.modalKind === 'board') showBoard(UI.boardBack);
+      else if (UI.modalKind === 'end') renderBoardSlot();
+    });
+    Board.init();
     $('modal').addEventListener('click', function (e) {
       if (e.target === $('modal') && UI.state && !$('modalCard').querySelector('#mStart')) closeModal();
     });

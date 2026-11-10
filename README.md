@@ -49,6 +49,15 @@ Ayrıntılı kurallar ve sonuç tablosu oyun içindeki **Kurallar** penceresinde
 | Uzatma | 16. haftanın sonunda isterseniz savaş sürer: iki taraf düzenli yedek alır; İstanbul düşene, siz bitirene ya da 1943 sonuna kadar |
 | Skor | Elde tutulan şehir puanı ×40, İstanbul +200, hafta başına +10, Mihver kademe kaybı ×15, Türk kademe kaybı ×−8, zorluk çarpanı (Kolay ×0,75, Zor ×1,3). Rütbe: Albay → Tuğgeneral (750) → Tümgeneral (1000) → Korgeneral (1250) → Orgeneral (1500) → Mareşal (1800). En iyi skor tarayıcıda saklanır |
 
+### Ortak skor tablosu
+
+Oyun claude.ai'de yayınlanan sayfasında açıldığında, sonuç ekranındaki **Skoru ortak tabloya ekle**
+düğmesi skoru paylaşılan tabloya yazar; tablo üst çubuktaki **Skorlar** düğmesinden de açılır.
+Her oyuncunun yalnızca en iyi skoru tutulur. Herkes tabloyu görebilir; her oyuncu yalnızca kendi
+kaydını yazabilir, sayfanın sahibi istenmeyen kayıtları silebilir. Skor eklemek için oturum açmış
+olmak ve sayfada en az "Katkıda bulunan" (Contributor) erişimi gerekir. Yerel dosyada ve GitHub
+Pages'te tablo kapalıdır; orada yalnızca tarayıcıdaki en iyi skor gösterilir.
+
 ### Kısayollar
 
 `Enter` turu bitir · `N` sıradaki birlik · `H` hava saldırısı · `T` takviye · `Esc` seçimi bırak · `+`/`−` yakınlaştır
@@ -63,6 +72,7 @@ js/data.js        Birlik türleri, savaş düzeni, takviyeler
 js/rules.js       Kural motoru (hareket, muharebe, ikmal, hava, tur akışı) — DOM'dan bağımsız
 js/ai.js          Mihver yapay zekâsı
 js/render.js      Canvas çizimi
+js/board.js       Ortak skor tablosu (claude.ai veri deposu)
 js/ui.js          Etkileşim, paneller, kaydet/yükle
 tests/sim.js      Kural testleri ve denge simülasyonu (Node)
 tests/print-map.js Haritanın ASCII önizlemesi
@@ -78,6 +88,16 @@ node tests/print-map.js  # haritayı metin olarak yazdır
 Simülasyonda Türk tarafı pasif oynar (yerinde kalır, takviye kullanır). Bu stratejiyle Normal
 seviyede sonuç çoğunlukla "Berabere", Zor seviyede çoğunlukla "Mihver Zaferi" olur; aktif savunma,
 karşı taarruz ve yedek kullanımıyla daha iyisi mümkündür.
+
+## Sürüm geçmişi
+
+Sürüm numarası `js/data.js` içindeki `O.VERSION` değişkenindedir; üst çubukta, giriş ekranında ve
+skor kayıtlarında görünür.
+
+- **0.4.0** — Sürüm numarası, ortak skor tablosu
+- **0.3.0** — 16 tur sonrası uzatma, skor ve rütbe sistemi, yıl boyu hava durumu
+- **0.2.0** — Çanakkale ve İstanbul boğazları, daha geniş Gelibolu Yarımadası, R35/T-26/Valentine zırhlı tugayları
+- **0.1.0** — İlk oynanabilir sürüm
 
 ## Geliştirme fikirleri
 
