@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kıbrıs 1974</title>
+  <meta name="description" content="1974 Kıbrıs harekâtını konu alan sıra tabanlı strateji oyunu: çıkarma, Girne–Lefkoşa koridoru ve ikinci harekât.">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header id="topbar">
+    <div class="brand">KIBRIS <span>1974</span> <small id="ver" class="ver"></small></div>
+    <div id="turnInfo" class="turn-info"></div>
+    <div class="spacer"></div>
+    <div class="tools">
+      <button id="btnZoomOut" title="Uzaklaştır">−</button>
+      <button id="btnZoomFit" title="Ekrana sığdır">⤢</button>
+      <button id="btnZoomIn" title="Yakınlaştır">+</button>
+      <button id="btnBoard">Skorlar</button>
+      <button id="btnHelp">Kurallar</button>
+      <button id="btnSave">Kaydet</button>
+      <button id="btnMenu">Menü</button>
+    </div>
+  </header>
+  <main id="layout">
+    <div id="mapWrap">
+      <canvas id="map" aria-label="Kıbrıs harekât haritası"></canvas>
+      <div id="tooltip" class="hidden"></div>
+      <div id="toast" class="hidden"></div>
+    </div>
+    <aside id="side">
+      <section id="phaseBox" class="panel"></section>
+      <section id="unitBox" class="panel"></section>
+      <section id="actions" class="panel actions"></section>
+      <section id="vpBox" class="panel"></section>
+      <section id="logBox" class="panel log">
+        <h3>Harp Günlüğü</h3>
+        <ol id="log"></ol>
+      </section>
+    </aside>
+  </main>
+  <div id="modal" class="hidden" role="dialog" aria-modal="true">
+    <div class="modal-card" id="modalCard"></div>
+  </div>
+
+  <script src="js/geo.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/rules.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/board.js"></script>
+  <script src="js/ui.js"></script>
+</body>
+</html>

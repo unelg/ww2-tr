@@ -14,6 +14,8 @@ Meriç ve Ergene nehirleri, Istranca Dağları gerçek coğrafyadan altıgenlere
 (Çanakkale ve İstanbul boğazları okunabilsin diye bir altıgen genişliğinde, yani gerçeğinden geniş çizilmiştir);
 Çakmak, Çatalca ve Bolayır hatlarının güzergâhları yaklaşıktır.
 
+> Bu depoda ikinci bir oyun daha var: **[Kıbrıs 1974](kibris-1974/README.md)** (`kibris-1974/index.html`).
+
 ## Nasıl oynanır
 
 Kurulum gerekmez. `index.html` dosyasını bir tarayıcıda açmanız yeterli.
